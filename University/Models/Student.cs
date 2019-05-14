@@ -89,7 +89,6 @@ namespace University.Models
             cmd.Parameters.Add(lastName);
             cmd.Parameters.Add(dateOfEnrollment);
             cmd.ExecuteNonQuery();
-            // _id = (int) cmd.LastInsertedId;
 
             conn.Close();
             if (conn != null)
@@ -164,7 +163,36 @@ namespace University.Models
             }
             return allStudents;
         }        
-
+        public List<Course> GetCourses()
+        {
+            List<Course> courses = new List<Course> {};
+            MySqlConnection conn = DB.Connection();
+            conn.Open();
+            var cmd = conn.CreateCommand() as MySqlCommand;
+            cmd.CommandText = @"SELECT courses.* FROM students
+                JOIN students_courses ON (students.id = students_courses.student_id)
+                JOIN courses ON (students_courses.courses_id = courses.id)
+                WHERE students.id = @studentId;";
+            MySqlParameter studentId = new MySqlParameter();
+            studentId.ParameterName = "@studentId";
+            studentId.Value = _id;
+            cmd.Parameters.Add(studentId);
+            var rdr = cmd.ExecuteReader() as MySqlDataReader;
+            while (rdr.Read())
+            {
+                int id = rdr.GetInt32(0);
+                string courseName = rdr.GetString(1);
+                int courseNumber = rdr.GetInt32(2);
+                Course foundCourse = new Course(courseName, courseNumber, id);
+                courses.Add(foundCourse);
+            }
+            conn.Close();
+            if (conn != null)
+            {
+                conn.Dispose();
+            }
+            return courses;            
+        }
 
         public override bool Equals(System.Object otherStudent)
         {
